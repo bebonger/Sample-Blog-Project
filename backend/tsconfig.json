@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "esModuleInterop": true,  
+        "sourceMap": true,
+        "emitDecoratorMetadata": true,
+        "target": "es2021",
+        "module": "ES2022",
+        "moduleResolution": "node",
+        "outDir": "./dist",
+    },
+    "include": [
+        "./src/**/*"
+, "nodemon.js"    ],
+    "files": [
+        "./src/index.ts"
+    ],
+    "ts-node": {
+        "files": true
+    }
+}
