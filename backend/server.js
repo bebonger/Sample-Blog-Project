@@ -1,5 +1,7 @@
 // server
 import Fastify from 'fastify';
+import sequelizeInstance from './database.js';
+import UserModel from './models/UserModel.js';
 
 // routes
 import auth from './routes/auth.js';
@@ -8,17 +10,11 @@ const fastify = Fastify({
   logger: true
 });
 
-fastify.get('/api', function (request, reply) {
-    reply.send({ hello: 'world' })
-});
-
 fastify.register(auth, {prefix: "api/auth"});
 
-// Run the server!
 fastify.listen({ port: 3000 }, function (err, address) {
     if (err) {
-      fastify.log.error(err)
-      process.exit(1)
+      fastify.log.error(err);
+      process.exit(1);
     }
-    // Server is now listening on ${address}
 });
