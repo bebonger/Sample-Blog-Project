@@ -1,7 +1,7 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="max-w-5xl mx-auto flex flex-col items-center justify-center pt-6 gap-6">
+    <h1 class="font-bold text-5xl">Recent Posts</h1>
+    <HelloWorld/>
   </div>
 </template>
 
