@@ -1,14 +1,13 @@
-import sequelizeInstance from '../database.js';
 import UserModel from '../models/UserModel.js';
-import bcrypt from 'bcrypt';
-import fastifyPassport from '../passport.js';
+import fastifyPassport from '../config/passport.js';
+import STATUS_TYPES from '../helpers/DataTypes.js';
 
 async function auth (fastify, options) {
     fastify.get('/', async (request, reply) => {
         return { hello: 'world' }
     });
 
-    fastify.post('/signup', {
+    fastify.post('/register', {
         schema: {
             body: {
                 username: { type: 'string' },
@@ -16,28 +15,34 @@ async function auth (fastify, options) {
                 password: { type: 'string' },
             }
         },
-    }, async (request, reply) => {
-        let user = await UserModel.findOne({ where: { username: request.body.username } })
+    }, async (req, res) => {
+        let user = await UserModel.findOne({ where: { username: req.body.username } })
         if (!user) {
             user = UserModel.build({ 
-                    username: request.body.username, 
-                    displayName: request.body.displayName,
-                    password: request.body.password,
+                    username: req.body.username, 
+                    displayName: req.body.displayName,
+                    password: req.body.password,
                 });
             await user.save();
-            console.log(`new user ${request.body.username} was created!`);
+            console.log(`new user ${req.body.username} was created!`);
+            await res.send({ status: STATUS_TYPES.SUCCESS, message: `User created successfully.` });
         } else {
-            console.log(`user ${request.body.username} already exists`);
+            console.log(`user ${req.body.username} already exists`);
+            await res.send({ status: STATUS_TYPES.FAILURE, message: `user ${req.body.username} already exists` });
         }
-        reply.send(request.body);
     })
 
     fastify.post('/login', {
-        preValidation: fastifyPassport.authenticate('local', {
-            successRedirect: '/',
-            failureRedirect: '/login'
+        preValidation: fastifyPassport.authenticate('local', function(req, res, info) {
+            console.log(info);
+            if (!user) {
+                console.log("bruh");
+                return res.send({ success : STATUS_TYPES.FAILURE, message : 'Wrong username or password' });
+            }
         })
-    }, () => { console.log("bruh") });
+    }, async (req, res) => {
+        await res.send({ status: STATUS_TYPES.SUCCESS, message: `Login successful` })
+    });
 }
 
 export default auth;

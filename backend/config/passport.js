@@ -1,6 +1,6 @@
 import { Authenticator } from '@fastify/passport'
 import LocalStrategy from 'passport-local';
-import UserModel from './models/UserModel.js';
+import UserModel from '../models/UserModel.js';
 
 const fastifyPassport = new Authenticator();
 
@@ -21,7 +21,6 @@ fastifyPassport.use(new LocalStrategy({
     }});
 
     if (!user) { console.log("user not found"); return done(null, false, {message: "Incorrect username or password."}) };
-    console.log(user); 
     return done(null, user); 
 }));
 

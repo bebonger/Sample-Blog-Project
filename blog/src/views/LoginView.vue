@@ -9,15 +9,18 @@
             <input class="w-full h-10 bg-transparent border-b-[1px] border-white/50 outline-none focus:border-white transition-all" type="text" v-model="password"/> 
             <br>
             <div class="w-full flex gap-5">
-                <button class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Login</button>
-                <button class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Register</button>
+                <button @click="login" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Login</button>
+                <button @click="register" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Register</button>
             </div>
         </div>
     </div>
 </template>
   
 <script>
-  export default {
+import { SHA256, enc } from 'crypto-js';
+import axios from 'axios';
+
+export default {
     name: 'LoginView',
     data() {
         return {
@@ -25,9 +28,28 @@
             password: "",
             displayName: "",
         }
+    },
+    methods: {
+        async login() {
+            await axios.post("/api/auth/login", {
+                username: this.username,
+                password: await this.encryptPassword(this.password)
+            });
+        },
+        async register() {
+            const response = await axios.post("/api/auth/register", {
+                username: this.username,
+                displayName: "temp",
+                password: await this.encryptPassword(this.password)
+            });
+            console.log(response);
+        },
+        async encryptPassword(password) {
+            let encrypted = SHA256(password).toString(enc.Hex);
+            return encrypted;
+        }
     }
-
-  }
+}
 </script>
   
 <style>
