@@ -30,6 +30,5 @@ const UserModel = sequelizeInstance.define('User', {
     }
 });
 
-UserModel.hasMany(PostModel);
 
 export default UserModel;

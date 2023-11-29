@@ -1,5 +1,4 @@
 import UserModel from '../models/UserModel.js';
-import fastifyPassport from '../config/passport.js';
 import STATUS_TYPES from '../helpers/DataTypes.js';
 
 async function me (fastify, options) {

@@ -12,6 +12,7 @@ import PostModel from './models/PostModel.js';
 // routes
 import auth from './routes/auth.js';
 import me from './routes/me.js';
+import posts from './routes/posts.js';
 
 const fastify = Fastify({
   logger: true
@@ -45,6 +46,11 @@ fastify.register(fastifyCors, {
 // routes
 fastify.register(auth, {prefix: "api/auth"});
 fastify.register(me, {prefix: "api/me"});
+fastify.register(posts, {prefix: "api/posts"});
+
+// Model association
+PostModel.belongsTo(UserModel);
+UserModel.hasMany(PostModel);
 
 (async () => {
   await sequelizeInstance.sync({ force: true });

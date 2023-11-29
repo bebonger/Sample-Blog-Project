@@ -1,11 +1,11 @@
 <template>
     <div class="post flex flex-col rounded-lg w-full overflow-hidden">
         <div class="post-header flex flex-col p-4">
-            <h1 class="font-bold text-lg">Enter Post Title Here</h1>
-            <p>by NAME</p>
+            <h1 class="font-bold text-lg">{{ post_data.title }}</h1>
+            <p>by {{ post_data.User.username }}</p>
         </div>
         <div v-if="!editing" class="post-content p-4">
-            <p>{{ content }}</p>
+            <p>{{ post_data.content }}</p>
         </div>
 
         <textarea v-else class="post-content m-4 border-white border-[1px] break-words p-2 h-64 w-auto" v-model="editContent"></textarea>
@@ -27,8 +27,7 @@ export default {
     post_data: {}
   },
   data() {
-    return {
-        content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    return { 
         editContent: "",
         editing: false
     }
@@ -36,7 +35,7 @@ export default {
   methods: {
     editPost() {
         this.editing = true;
-        this.editContent = this.content;
+        this.editContent = this.post_data.content;
     },
     deletePost() {
         axios.post("/api/post/delete", {

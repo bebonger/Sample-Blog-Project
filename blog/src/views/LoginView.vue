@@ -22,8 +22,11 @@
                     <li>&#x2022; Upper case characters</li>
                 </ul>
             </p>
+            <br v-if="registering">
+            <p v-if="registering" class="w-full text-white/50">Re-enter Password</p>
+            <input v-if="registering" class="w-full h-10 bg-transparent border-b-[1px] border-white/50 outline-none focus:border-white transition-all" type="password" v-model="repassword"/> 
             <button v-if="!registering" @click="startRegister" class="w-full text-end text-sm p-4 text-white/50 hover:text-white transition-all">Create Account</button>
-            <button v-else @click="startLogin" class="w-full text-end text-sm p-4 text-white/50 hover:text-white transition-all">Login</button>
+            <button v-else @click="startLogin" class="w-full text-end text-sm p-4 text-white/50 hover:text-white transition-all">Back to login</button>
             <button v-if="!registering" @click="login" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Login</button>
             <button v-else @click="register" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Register</button>
         </div>
@@ -42,6 +45,7 @@ export default {
             email: "",
             username: "",
             password: "",
+            repassword: "",
             displayName: "",
             registering: false,
         }
@@ -67,6 +71,7 @@ export default {
             this.registering = true;
             this.username = "";
             this.password = "";
+            this.repassword = "";
         },
         startLogin() {
             this.registering = false;
@@ -74,6 +79,16 @@ export default {
             this.password = "";
         },
         async register() {
+            if (!this.validateEmail() || !this.validateUsername() || !this.validatePassword()) {
+                alert("Incorrect fields");
+                return;
+            }
+
+            if (!this.passwordsMatch()) {
+                alert("Passwords do not match");
+                return;
+            }
+            
             const res = await axios.post("/api/auth/register", {
                 username: this.username,
                 email: this.email,
@@ -89,6 +104,7 @@ export default {
                 alert("User already exists");
                 this.username = "";
                 this.password = "";
+                this.repassword = ""; 
             }
         },
         async encryptPassword(password) {
@@ -107,6 +123,9 @@ export default {
         },
         validatePassword() {
             return String(this.password).match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/);
+        },
+        passwordsMatch() {
+            return this.password == this.repassword;
         }
     }
 }
