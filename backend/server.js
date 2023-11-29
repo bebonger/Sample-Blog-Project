@@ -1,32 +1,58 @@
 // server
 import Fastify from 'fastify';
-import fastifySecureSession from '@fastify/secure-session'
-import fastifyPassport from './config/passport.js';
+import fastifyCors from '@fastify/cors';
+import fastifySession from '@fastify/session';
+import fastifyCookie from '@fastify/cookie';
+import fastifyFormbody from '@fastify/formbody';
 
 import sequelizeInstance from './config/database.js';
 import UserModel from './models/UserModel.js';
+import PostModel from './models/PostModel.js';
 
 // routes
 import auth from './routes/auth.js';
+import me from './routes/me.js';
 
 const fastify = Fastify({
   logger: true
 });
 
-// routes
-fastify.register(auth, {prefix: "api/auth"});
+fastify.register(fastifyFormbody);
 
 // register session management
-fastify.register(fastifySecureSession, { secret: 'SHINRA TENsei .. . . this WORLD shall know PAIN...' })
-fastify.register(fastifyPassport.initialize());
-fastify.register(fastifyPassport.secureSession(), {
+fastify.register(fastifyCookie);
+fastify.register(fastifySession, { 
+  secret: 'this world SHALL know PAIN. .. . SHINRA TENSEI!',
+  saveUninitialized: true,
   cookie: {
-    maxAge: 86400
+    secure: false,
+    httpOnly: true,
   }
-});
+})
+
+fastify.addHook('preHandler', (request, reply, next) => {
+  if (request.session.isAuthenticated == null) {
+    request.session.isAuthenticated = false;
+  } 
+  next();
+})
+
+fastify.register(fastifyCors, {
+  origin: 'http://127.0.0.1',
+  credentials: true
+})
+
+// routes
+fastify.register(auth, {prefix: "api/auth"});
+fastify.register(me, {prefix: "api/me"});
+
+(async () => {
+  await sequelizeInstance.sync({ force: true });
+  // Code here
+})();
 
 fastify.listen({ port: 3000 }, function (err, address) {
-    if (err) {
+    if (err) { 
       fastify.log.error(err);
       process.exit(1);
     }

@@ -4,11 +4,6 @@ import UserModel from '../models/UserModel.js';
 
 const fastifyPassport = new Authenticator();
 
-fastifyPassport.registerUserSerializer(async (user, request) => user.id);
-fastifyPassport.registerUserDeserializer(async (id, request) => {
-    return await UserModel.findOne({ where: { id: id } });
-});
-
 fastifyPassport.use(new LocalStrategy({
     usernameField: 'username',
     passwordField: 'password',
@@ -20,8 +15,20 @@ fastifyPassport.use(new LocalStrategy({
         password: password
     }});
 
-    if (!user) { console.log("user not found"); return done(null, false, {message: "Incorrect username or password."}) };
+    if (!user) { 
+        console.log("user not found"); 
+        return done(null, null); 
+    };
+
     return done(null, user); 
 }));
+
+fastifyPassport.registerUserSerializer(async (user, req) =>  {
+    return user.dataValues.id;
+});
+fastifyPassport.registerUserDeserializer(async (id, req) => {
+    console.log("TRYING TO DESERIALIZE");
+    return await UserModel.findOne({ where: { id: id } });
+});
 
 export default fastifyPassport;

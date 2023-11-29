@@ -19,8 +19,12 @@
     "cross-env": "^7.0.3"
   },
   "dependencies": {
+    "@fastify/cookie": "^9.2.0",
+    "@fastify/cors": "^8.4.1",
+    "@fastify/formbody": "^7.4.0",
     "@fastify/passport": "^2.4.0",
     "@fastify/secure-session": "^7.1.0",
+    "@fastify/session": "^10.6.1",
     "@sequelize/core": "^7.0.0-alpha.29",
     "bcrypt": "^5.1.1",
     "crypto": "^1.0.1",

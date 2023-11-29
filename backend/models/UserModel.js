@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelizeInstance from '../config/database.js';
+import PostModel from './PostModel.js';
 
 const UserModel = sequelizeInstance.define('User', {
     // PRIMARY KEY
@@ -9,10 +10,9 @@ const UserModel = sequelizeInstance.define('User', {
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4
     },
-    displayName: {
+    email: {
         type: DataTypes.STRING,
         allowNull: false,
-        length: 16
     },
     username: {
         type: DataTypes.STRING,
@@ -30,9 +30,6 @@ const UserModel = sequelizeInstance.define('User', {
     }
 });
 
-(async () => {
-    await sequelizeInstance.sync({ force: true });
-    // Code here
-})();
+UserModel.hasMany(PostModel);
 
 export default UserModel;

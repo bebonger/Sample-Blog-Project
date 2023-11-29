@@ -1,11 +1,35 @@
 <template>
   <nav class="max-w-5xl mx-auto flex items-center gap-3">
     <router-link to="/">Home</router-link>
-    <router-link to="/about">My Profile</router-link>
-    <router-link class="ml-auto" to="/login">Login</router-link>
+    <router-link v-if="isLoggedIn()" to="/about">My Profile</router-link>
+    <button @click="logout" v-if="isLoggedIn()" class="ml-auto font-bold" to="">Logout</button>
+    <router-link v-if="!isLoggedIn()" class="ml-auto" to="/login">Login</router-link>
   </nav>
   <router-view/>
 </template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  async mounted() {
+    const res = await axios.get("/api/me");
+    if (res.data.status == 1) {
+      this.$store.state.user = res.data.user;
+    }
+  },
+  methods: {
+    isLoggedIn() {
+      return this.$store.state.user != null;
+    },
+    async logout() {
+      await axios.get("/api/auth/logout");
+      this.$store.state.user = null;
+      alert("Logged out successfully");
+    }
+  }
+}
+</script>
 
 <style>
 #app {
