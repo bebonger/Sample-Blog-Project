@@ -1,8 +1,8 @@
 <template>
   <div class="max-w-5xl mx-auto flex flex-col items-center justify-center pt-6 px-6 gap-6">
     <h1 class="font-bold text-5xl">Recent Posts</h1>
-    <button v-if="isLoggedIn()" @click="togglePostCreate(true)" class="ml-auto border-[1px] p-2 rounded-lg hover:bg-white hover:text-black transition-all">Create Post</button>
-    <div v-if="isLoggedIn() && creatingPost" class="fixed top-0 left-0 w-screen h-screen bg-black/70 transition-all">
+    <button v-if="this.$store.getters.isLoggedIn" @click="togglePostCreate(true)" class="ml-auto border-[1px] p-2 rounded-lg hover:bg-white hover:text-black transition-all">Create Post</button>
+    <div v-if="this.$store.getters.isLoggedIn && creatingPost" class="fixed top-0 left-0 w-screen h-screen bg-black/70 transition-all">
       <div class="max-w-5xl mx-auto flex flex-col items-center justify-center pt-12 px-6 gap-6">
         <div class="post-create w-full flex flex-col rounded-xl p-6 gap-2">
           <div class="flex flex-row items-start pb-2">
@@ -19,7 +19,8 @@
       </div>
     </div>
 
-    <PostComponent v-for="post in posts" :key="post.id" :post_data="post"/>
+    <p v-if="posts.length == 0">No posts found</p>
+    <PostComponent v-for="post in posts" :key="post.id" :post_data="post" @postUpdate="refreshPosts"/>
   </div>
 </template>
 
@@ -27,6 +28,7 @@
 // @ is an alias to /src
 import PostComponent from '@/components/PostComponent.vue'
 import axios from 'axios';
+import STATUS_TYPES from '@/../../global/DataTypes.mjs'
 
 export default {
   name: 'HomeView',
@@ -34,13 +36,9 @@ export default {
     PostComponent
   },
   async mounted() {
-    const res = await axios.get("/api/posts");
-    this.posts = res.data;
+    await this.refreshPosts();
   },
   methods: {
-    isLoggedIn() {
-      return this.$store.state.user != null;
-    },
     togglePostCreate(toggle) {
       this.creatingPost = toggle;
     },
@@ -56,17 +54,23 @@ export default {
           content: this.newPost.content
         });
 
-        if (res.data.status == 1) {
+        if (res.data.status == STATUS_TYPES.SUCCESS) {
           alert("Post created successfully");
           this.creatingPost = false;
           this.newPost.title = "";
           this.newPost.content = "";
+
+          await this.refreshPosts();
         } else {
           alert("Something went wrong: " + res.data.message);
         }
       } catch (err) {
         console.log(err);
       }
+    },
+    async refreshPosts() {
+      const res = await axios.get("/api/posts");
+      this.posts = res.data;
     }
   },
   data() {

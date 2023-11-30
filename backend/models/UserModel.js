@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
 import sequelizeInstance from '../config/database.js';
-import PostModel from './PostModel.js';
 
 const UserModel = sequelizeInstance.define('User', {
     // PRIMARY KEY

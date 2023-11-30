@@ -1,5 +1,5 @@
 import UserModel from '../models/UserModel.js';
-import STATUS_TYPES from '../helpers/DataTypes.js';
+import STATUS_TYPES from '../../global/DataTypes.mjs';
 import { Op } from 'sequelize';
 
 async function auth (fastify, options) {
@@ -17,28 +17,30 @@ async function auth (fastify, options) {
                 ] 
             }
         })
-        if (!user) {
-            user = UserModel.build({ 
-                    username: req.body.username, 
-                    email: req.body.email,
-                    password: req.body.password,
-                });
-            await user.save();
 
-            console.log(`new user ${req.body.username} was created!`);
-            req.session.user = {
-                id: user.dataValues.id,
-                username: user.dataValues.username,
-                email: user.dataValues.email,
-            };
-
-            req.session.isAuthenticated = true;
-
-            await res.send({ status: STATUS_TYPES.SUCCESS, message: `User created successfully.` });
-        } else {
+        if (user) {
             console.log(`user ${req.body.username} already exists`);
             await res.send({ status: STATUS_TYPES.FAILURE, message: `Username or email already in use.` });
+            return;
         }
+
+        user = UserModel.build({ 
+                username: req.body.username, 
+                email: req.body.email,
+                password: req.body.password,
+            });
+        await user.save();
+
+        console.log(`new user ${req.body.username} was created!`);
+        req.session.user = {
+            id: user.dataValues.id,
+            username: user.dataValues.username,
+            email: user.dataValues.email,
+        };
+
+        req.session.isAuthenticated = true;
+
+        await res.send({ status: STATUS_TYPES.SUCCESS, message: `User created successfully.` });
     })
 
     fastify.post('/login', async function(req, res) {

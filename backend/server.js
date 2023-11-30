@@ -8,6 +8,7 @@ import fastifyFormbody from '@fastify/formbody';
 import sequelizeInstance from './config/database.js';
 import UserModel from './models/UserModel.js';
 import PostModel from './models/PostModel.js';
+import PostCommentModel from './models/PostCommentModel.js';
 
 // routes
 import auth from './routes/auth.js';
@@ -50,7 +51,11 @@ fastify.register(posts, {prefix: "api/posts"});
 
 // Model association
 PostModel.belongsTo(UserModel);
+PostModel.hasMany(PostCommentModel);
+PostCommentModel.belongsTo(UserModel);
+PostCommentModel.belongsTo(PostModel);
 UserModel.hasMany(PostModel);
+UserModel.hasMany(PostCommentModel);
 
 (async () => {
   await sequelizeInstance.sync({ force: true });

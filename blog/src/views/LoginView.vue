@@ -1,6 +1,6 @@
 <template>
     <div class="max-w-5xl mx-auto flex flex-col items-center justify-center pt-6 px-6 gap-6">
-        <div class="login-card max-w-lg flex flex-col gap-2 rounded-xl w-full items-center justify-center p-5">
+        <form class="login-card max-w-lg flex flex-col gap-2 rounded-xl w-full items-center justify-center p-5">
             <h1 v-if="!registering" class="font-bold text-3xl">Login</h1>
             <h1 v-else class="font-bold text-3xl">Create Account</h1>
             <br>
@@ -25,11 +25,11 @@
             <br v-if="registering">
             <p v-if="registering" class="w-full text-white/50">Re-enter Password</p>
             <input v-if="registering" class="w-full h-10 bg-transparent border-b-[1px] border-white/50 outline-none focus:border-white transition-all" type="password" v-model="repassword"/> 
-            <button v-if="!registering" @click="startRegister" class="w-full text-end text-sm p-4 text-white/50 hover:text-white transition-all">Create Account</button>
-            <button v-else @click="startLogin" class="w-full text-end text-sm p-4 text-white/50 hover:text-white transition-all">Back to login</button>
-            <button v-if="!registering" @click="login" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Login</button>
-            <button v-else @click="register" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Register</button>
-        </div>
+            <button v-if="!registering" type="button" @click="startRegister" class="ml-auto text-sm p-4 text-white/50 hover:text-white transition-all">Create Account</button>
+            <button v-else type="button" @click="startLogin" class="ml-auto text-end text-sm p-4 text-white/50 hover:text-white transition-all">Back to login</button>
+            <button v-if="!registering" type="button" @click="login" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Login</button>
+            <button v-else type="button" @click="register" class="w-full p-5 rounded-3xl border-[1px] hover:bg-white hover:text-black transition-all">Register</button>
+        </form>
     </div>
 </template>
   
@@ -37,6 +37,7 @@
 import { SHA256, enc } from 'crypto-js';
 import axios from 'axios';
 import router from '@/router';
+import STATUS_TYPES from '@/../../global/DataTypes.mjs'
 
 export default {
     name: 'LoginView',
@@ -53,15 +54,15 @@ export default {
     methods: {
         async login() {
             const res = await axios.post("/api/auth/login", {
-                username: this.username,
+                username: this.username.toLowerCase(),
                 password: await this.encryptPassword(this.password)
             });
-            if (res.data.status == 1) {
+            if (res.data.status == STATUS_TYPES.SUCCESS) {
                 alert("Login successful");
                 const _user = await axios.get("/api/me", { withCredentials: true });
-                this.$store.state.user = _user.data;
+                this.$store.state.user = _user.data.user;
                 router.push({ path: "/" });
-            } else if (res.data.status == 0) {
+            } else if (res.data.status == STATUS_TYPES.FAILURE) {
                 alert("Wrong username or password");
                 this.username = "";
                 this.password = "";
@@ -95,16 +96,19 @@ export default {
                 password: await this.encryptPassword(this.password)
             });
 
-            if (res.data.status == 1) {
-                alert("User created successfully");
-                const _user = await axios.get("/api/me", { withCredentials: true });
-                this.$store.state.user = _user.data;
-                router.push({ path: "/" });
-            } else if (res.data.status == 0) {
+            if (res.data.status == STATUS_TYPES.FAILURE) {
                 alert("User already exists");
+                console.log("User already exists");
                 this.username = "";
                 this.password = "";
                 this.repassword = ""; 
+            } else {
+                
+                alert("User created successfully");
+                console.log("User created successfully");
+                const _user = await axios.get("/api/me", { withCredentials: true });
+                this.$store.state.user = _user.data.user;
+                router.push("/"); // NOT WORKING???
             }
         },
         async encryptPassword(password) {

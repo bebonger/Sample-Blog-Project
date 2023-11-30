@@ -5,6 +5,9 @@ export default createStore({
     user: null
   },
   getters: {
+    isLoggedIn(state) {
+      return state.user != null;
+    }
   },
   mutations: {
   },
