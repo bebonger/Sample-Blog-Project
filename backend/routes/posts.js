@@ -2,6 +2,7 @@ import PostModel from '../models/PostModel.js';
 import STATUS_TYPES from '../../global/DataTypes.mjs';
 import UserModel from '../models/UserModel.js';
 import PostCommentModel from '../models/PostCommentModel.js';
+import { Op } from 'sequelize';
 
 async function posts (fastify, options) {
     fastify.get("/", async(req, res) => {
@@ -37,12 +38,12 @@ async function posts (fastify, options) {
         await res.send(fullComments);
     });
 
-    const recursivelyGetComments = async(comment) => {
+    const recursivelyGetComments = async(comment, isRaw = true) => {
         const subComments = await PostCommentModel.findAll({
             where: { PostCommentId: comment.id },
             include: [{ model: UserModel, attributes: ['username'] }], 
             order: [['createdAt', 'DESC']],
-            raw: true
+            raw: isRaw
         });
 
         const processedComments = subComments.map(comment => {
@@ -115,14 +116,39 @@ async function posts (fastify, options) {
                     res.send({ status: STATUS_TYPES.FAILURE, message: "No permissions to perform this action"});
                     return;
                 }
+
+                // const fullComment = await recursivelyGetComments(comment, false);
+                // await recursivelyDeleteComments(fullComment);
                 await comment.destroy();
+                
                 await res.send({ status: STATUS_TYPES.SUCCESS, message: "Comment deleted successfully"});
 
             } catch (err) {
-                res.send({ status: STATUS_TYPES.FAILURE, message: err.message});
+                res.send({ status: STATUS_TYPES.FAILURE, message: err.message}); 
             }
         }
     });
+
+    // THIS IS NOT WORKING SO IM NOT GOING TO CARE
+    const recursivelyDeleteComments = async (comment) => {
+        
+        if (!comment) return;
+
+        if (comment.subComments.length > 0) {
+            const promises = [];
+            comment['subComments'].forEach(subComment => {
+                promises.push(recursivelyDeleteComments(subComment));
+            });
+
+            await Promise.all(promises);
+            await comment.destroy();
+        } else {
+            await comment.destroy();
+        }
+
+        console.log(`Destroying comment: ${JSON.stringify(comment)}`);
+        
+    }
 
     fastify.post("/comment/:commentId", async(req, res) => {
         if (!req.session.isAuthenticated) {
@@ -188,6 +214,30 @@ async function posts (fastify, options) {
             res.send({ status: STATUS_TYPES.FAILURE, message: "No permissions to perform this action"});
             return;
         }
+
+        /*
+        let comments = await PostCommentModel.findAll({ 
+            where: { PostId: req.body.post_id },
+            order: [['createdAt', 'DESC']],
+        });
+
+        if (comments.length > 0) {
+            let promises = [];
+            comments.forEach(comment => {
+                promises.push(recursivelyGetComments(comment));
+            });
+
+            const fullComments = await Promise.all(promises);
+
+            promises = [];
+            console.log(fullComments);
+            fullComments.forEach(comment => {
+                promises.push(recursivelyDeleteComments(comment));
+            });
+
+            await Promise.all(promises);
+        }
+        */
 
         await post.destroy();
         

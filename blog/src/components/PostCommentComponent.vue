@@ -17,7 +17,12 @@
             <textarea class="bg-transparent rounded-lg border-white/50 border-[1px] break-words p-2 h-24 w-full hover:border-white transition-all" placeholder="Write a comment..." v-model="commentContent"></textarea>
             <button type="button" @click="createSubComment" class="ml-auto border-[1px] p-2 rounded-lg hover:bg-white hover:text-black transition-all mt-2">Reply to comment</button>
         </div>
-        <div v-if="comment_data.subComments.length > 0" class="ml-4 border-l-[1px] border-dashed">
+
+        <div v-if="comment_data.subComments.length > 0">
+            <button class="text-sm text-white/50" @click="showReplies = !showReplies">{{ showReplies ? 'Hide replies' : 'Show replies' }}</button>
+        </div>
+        
+        <div v-if="comment_data.subComments.length > 0 && showReplies" class="ml-4 border-l-[1px] border-dashed">
             <PostCommentComponent :comment_data="comment" class="p-4 flex flex-col" v-for="comment in comment_data.subComments" :key="comment.id" @commentUpdate="emitCommentUpdateEvent"/>
         </div>
     </div>
@@ -33,7 +38,7 @@ export default {
     },
     data() {
         return { 
-            
+            showReplies: false,
             editContent: "",
             editing: false,
             replying: false
