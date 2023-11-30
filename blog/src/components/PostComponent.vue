@@ -109,6 +109,7 @@ export default {
         },
         async refreshComments() {
             const res = await axios.get(`/api/posts/${this.post_data.id}`);
+            console.log(res.data);
             this.comments = res.data;
         },
         cancelEdit() {

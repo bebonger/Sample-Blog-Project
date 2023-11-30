@@ -56,7 +56,10 @@ PostCommentModel.belongsTo(UserModel);
 PostCommentModel.belongsTo(PostModel);
 UserModel.hasMany(PostModel);
 UserModel.hasMany(PostCommentModel);
+PostCommentModel.hasMany(PostCommentModel);
+PostCommentModel.belongsTo(PostCommentModel);
 
+// Reset and build the database schema
 (async () => {
   await sequelizeInstance.sync({ force: true });
   // Code here

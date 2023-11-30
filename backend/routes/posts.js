@@ -13,13 +13,56 @@ async function posts (fastify, options) {
     });
 
     fastify.get("/:id", async(req, res) => {
-        const comments = await PostCommentModel.findAll({ 
+        let comments = await PostCommentModel.findAll({ 
             where: { PostId: req.params.id },
             include: [{ model: UserModel, attributes: ['username'] }], 
-            order: [['createdAt', 'DESC']] 
+            order: [['createdAt', 'DESC']],
+            raw: true
         });
-        await res.send(comments);
+
+        const processedComments = comments.map(comment => {
+            comment.user = { username: comment['User.username'] };
+            delete comment['User.username'];
+            return comment;
+        });
+        
+        const promises = [];
+        processedComments.forEach(comment => {
+            promises.push(recursivelyGetComments(comment));
+        })
+
+        const fullComments = await Promise.all(promises);
+
+        console.log(fullComments);
+        await res.send(fullComments);
     });
+
+    const recursivelyGetComments = async(comment) => {
+        const subComments = await PostCommentModel.findAll({
+            where: { PostCommentId: comment.id },
+            include: [{ model: UserModel, attributes: ['username'] }], 
+            order: [['createdAt', 'DESC']],
+            raw: true
+        });
+
+        const processedComments = subComments.map(comment => {
+            comment.user = { username: comment['User.username'] };
+            delete comment['User.username'];
+            return comment;
+        });
+
+        if (processedComments.length > 0) {
+            const promises = [];
+            processedComments.forEach(comment => {
+                promises.push(recursivelyGetComments(comment));
+            });
+
+            comment['subComments'] = await Promise.all(promises);
+        }
+
+        else comment['subComments'] = [];
+        return comment;
+    }
 
     fastify.post("/:id/comment", async(req, res) => {
         if (!req.session.isAuthenticated) {
@@ -48,7 +91,7 @@ async function posts (fastify, options) {
 
         if (req.body.operation == 'edit') {
             try {
-                const comment = await PostCommentModel.findOne({ where: { id: req.params.id }});
+                const comment = await PostCommentModel.findOne({ where: { id: req.body.id }});
 
                 if (!req.session.isAuthenticated || !comment || req.session.user.id != comment.UserId) {
                     res.send({ status: STATUS_TYPES.FAILURE, message: "No permissions to perform this action"});
@@ -66,7 +109,7 @@ async function posts (fastify, options) {
 
         if (req.body.operation == 'delete') {
             try {
-                const comment = await PostCommentModel.findOne({ where: { id: req.params.id }});
+                const comment = await PostCommentModel.findOne({ where: { id: req.body.id }});
 
                 if (!req.session.isAuthenticated || !comment || req.session.user.id != comment.UserId) {
                     res.send({ status: STATUS_TYPES.FAILURE, message: "No permissions to perform this action"});
@@ -79,7 +122,32 @@ async function posts (fastify, options) {
                 res.send({ status: STATUS_TYPES.FAILURE, message: err.message});
             }
         }
+    });
 
+    fastify.post("/comment/:commentId", async(req, res) => {
+        if (!req.session.isAuthenticated) {
+            res.send({ status: STATUS_TYPES.FAILURE, message: "No permissions to perform this action"});
+            return;
+        }
+
+        if (!req.body.operation) {
+            res.send({ status: STATUS_TYPES.FAILURE, message: "No operation specified"});
+            return;
+        }
+
+        if (req.body.operation == 'create') {
+            try {
+                const comment = await PostCommentModel.create({
+                    PostCommentId: req.params.commentId,
+                    UserId: req.session.user.id,
+                    content: req.body.content
+                });
+            } catch (err) {
+                res.send({ status: STATUS_TYPES.FAILURE, message: err});
+            }
+    
+            await res.send({ status: STATUS_TYPES.SUCCESS, message: "Comment created successfully"});
+        }
     });
 
     fastify.post("/create", async(req, res) => {
