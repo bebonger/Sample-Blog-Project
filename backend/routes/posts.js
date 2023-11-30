@@ -243,21 +243,7 @@ async function posts (fastify, options) {
         
         await res.send({ status: STATUS_TYPES.SUCCESS, message: "Post deleted" });
     });
-
-    fastify.get("/me", async(req, res) => {
-        if (!req.session.isAuthenticated) {
-            res.send({ status: STATUS_TYPES.FAILURE, message: "No permissions to perform this action"});
-            return;
-        }
-
-        const posts = await PostModel.findAll({ 
-            where: { UserId: req.session.user.id },
-            include: [{ model: UserModel, attributes: ['username'] }], 
-            order: [['createdAt', 'DESC']] 
-        });
-        await res.send(posts);
-    });
-
+    
     fastify.post("/comments", async(req, res) => {
         const post = await PostModel.findOne({ where: { id: req.body.post_id }});
         
